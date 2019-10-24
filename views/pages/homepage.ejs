@@ -1,4 +1,4 @@
-<div class="pt-6" id="homepage" :class="[heroHeightSet ? '' : 'uninitialized']" v-cloak>
+<div class="pt-6" id="homepage" :class="[heroHeightSet ? '' : 'uninitialized'] " v-cloak>
 
   <!-- news slider -->
   <!-- <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
@@ -112,21 +112,23 @@
     <div class="container">
       <div class="about text-center pt-5">
         <h3>News</h3><br>
+        <p v-if="isLoading" class="p-5 mb-5" ><img class="center p-5 mb-5" src="/images/loading.gif" alt=""></p>
+
       </div>
       <!--Grid row-->
       <div class="row">
 
         <!--Grid column-->
-        <div class="col-lg-4 col-md-12 mb-5" v-for="latest in latests">
+        <div class="col-lg-4 col-md-12 mb-5" v-for="latest in results.slice(0,3)">
 
           <!--Card-->
           <div class="card card-content pb-5">
 
             <!--Card image-->
             <div class="view overlay">
-              <a :href="'news/'+ latest.id"><img :src="latest.imageSrc" class="card-img-top" alt=""></a>
+              <a :href="latest.url" target="_blank"><img :src="latest.urlToImage" class="card-img-top p-2" alt=""></a>
 
-              <a :href="'news/'+ latest.id">
+              <a :href="latest.url" target="_blank">
                 <div class="mask rgba-white-slight waves-effect waves-light"></div>
               </a>
             </div>
@@ -134,11 +136,11 @@
             <!--Card content-->
             <div class="card-body">
               <!--Title-->
-              <a :href="'news/'+ latest.id">
-                <h4 style="color:#009dff" class="card-title">{{latest.newsName}}</h4>
+              <a :href="latest.url" target="_blank">
+                <h4 style="color:#009dff" class="card-title">{{latest.title}}</h4>
               </a>
               <!--Text-->
-              <a :href="'news/'+ latest.id" class="btn btn-outline-primary">Read more</a>
+              <a :href="latest.url" target="_blank" class="btn btn-outline-primary">Read more</a>
             </div>
 
           </div>
@@ -220,7 +222,7 @@
               <div class="carousel-inner z-depth-1-half" role="listbox">
                 <!--First slide-->
                 <div class="carousel-item active">
-                  <img class="d-block w-100 card card-content inner" :src="event.imageSrc" alt="First slide">
+                  <img  class="d-block w-100 h-75 card card-content inner responsiveimage" :src="event.imageSrc" alt="First slide">
                 </div>
               </div>
             </div>
@@ -285,6 +287,32 @@
                   <h4 style="color:#009dff" class="my-4 font-weight-bold">{{shop.shopName}}</h4>
                 </a>
               </div>
+
+              <div class="waitingTime">
+                <p> Estimating waiting time:</p>
+                <p v-if="shop.waitingTime > 99">
+                  <span class="badge badge-pill badge-danger">{{shop.waitingTime}}
+                    minutes</span>
+                </p>
+
+                <p v-else-if="shop.waitingTime > 29">
+                  <span class="badge badge-pill badge-warning">{{shop.waitingTime}}
+                    minutes</span>
+                </p>
+
+                <p v-else-if="shop.waitingTime > 0">
+                  <span class="badge badge-pill badge-success">{{shop.waitingTime}}
+                    minutes</span>
+                </p>
+
+                <p v-else-if="shop.waitingTime == 0">
+                  <span class="badge badge-pill badge-secondary">{{shop.waitingTime}}
+                    minutes</span>
+                </p>
+
+                <p>Updated at: {{shop.updateTime.slice(15, 21)}}</p>
+
+              </div>
               <!-- ratings -->
               <div class="rating inner">
                 <!-- <span>Ratings: </span> -->
@@ -298,26 +326,26 @@
               <!-- <p class="text-muted">{{shop.shopDetail}}</p> -->
               <!-- delete button -->
               <!-- <% if(me && me.isSuperAdmin == true){ %>
-              <button class="options-button shopbutton" title="Delete" @click="clickDeleteShop(shop.id)">
-                <i class="far fa-trash-alt text-danger"></i>
-              </button>
-              <% } %> -->
+        <button class="options-button shopbutton" title="Delete" @click="clickDeleteShop(shop.id)">
+          <i class="far fa-trash-alt text-danger"></i>
+        </button>
+        <% } %> -->
 
-            </div>
-            <!--Grid column-->
-          </div>
-        </div>
-        <% if(!me) { %>
-        <!--Grid row-->
-        <p class="font-weight-bold">Can not found your clinic? Register your clinic now. It's free.</p>
-        <a class="btn btn-primary btn-md waves-effect waves-light" style="color: black" href="/shopsignup">Register</a>
-        <% } %>
-
-      </section>
+      </div>
+      <!--Grid column-->
     </div>
+  </div>
+  <% if(!me) { %>
+  <!--Grid row-->
+  <p class="font-weight-bold">Can not found your clinic? Register your clinic now. It's free.</p>
+  <a class="btn btn-primary btn-md waves-effect waves-light" style="color: black" href="/shopsignup">Register</a>
+  <% } %>
 
-  </main>
-  <!-- <div class="container">
+  </section>
+</div>
+
+</main>
+<!-- <div class="container">
     <div class="setup">
       <h3 class="text-center">How to get started:</h3>
       <div class="step">

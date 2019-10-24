@@ -56,7 +56,7 @@ module.exports.routes = {
   // 'GET /admin/cevent': { action: 'admin/view-cevent' },
   // 'GET /admin/cnews': { action: 'admin/view-cnews' },
 
-  'GET /news': { action: 'news/view-available-news' },
+  // 'GET /news': { action: 'news/view-available-news' },
   // 'Get /news/article': { action: 'news/view-news-article' },
   // 'GET /news/create': { action: 'news/view-create-news' },
   // 'GET /news/modify/:id': { action: 'news/view-modify-news' },
@@ -72,10 +72,9 @@ module.exports.routes = {
 
   'GET /admin': { action: 'admin/view-manage-data' },
 
-  // test
-  'GET /test/news': { action: 'test/view-news-health' },
-  'GET /test/editor': { action: 'test/view-editor' },
-  'GET /test/test-user': { action: 'test/view-test-user' },
+  // news api
+  'GET /news': { action: 'test/view-news-health' },
+
   //  ╔═╗╔═╗╦  ╔═╗╔╗╔╔╦╗╔═╗╔═╗╦╔╗╔╔╦╗╔═╗
   //  ╠═╣╠═╝║  ║╣ ║║║ ║║╠═╝║ ║║║║║ ║ ╚═╗
   //  ╩ ╩╩  ╩  ╚═╝╝╚╝═╩╝╩  ╚═╝╩╝╚╝ ╩ ╚═╝

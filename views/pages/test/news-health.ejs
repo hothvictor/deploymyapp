@@ -1,33 +1,40 @@
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+<!-- <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script> -->
 
-<div id="news-health" v-cloak>
-  <main id="app" >
+<!-- <div v-if="isLoading" id="loading"></div> -->
+
+<div id="news-health" class="apple-bg" v-cloak>
+
+  <main id="app" class="mb-5">
 
     <!--Main container-->
-    <div class="container">
-      <section id="gallery">
+    <div class="container mb-5">
+      <section id="gallery" class="mb-5">
         <!-- Heading -->
         <h2 class="mb-5 font-weight-bold text-center">News</h2>
+        <div v-if="isLoading" class="p-5" ><img class="center p-5" src="/images/loading.gif" alt=""></div>
 
         <!-- Loop -->
         <!--Grid row-->
         <div class="row">
-          <section v-if="errored">
+          <!-- <section v-if="errored">
             <p>We're sorry, we're not able to retrieve this information at the moment, please try back later</p>
-          </section>
+          </section> -->
 
-          <div v-if="loading">Loading...</div>
+          <!-- <div v-if="loading">Loading...</div> -->
 
 
           <!--Grid column-->
-          <div v-else class="col-lg-4 col-md-12 mb-4" v-for="article in info ">
+          <div class="col-lg-4 col-md-12 mb-4" v-for="article in results ">
             <!--Card-->
-            <div class="card">
+            <div class="card  card-content">
 
               <!--Card image-->
               <div class="view overlay">
-                <a :href="article.url" target="_blank"><img :src="article.urlToImage" class="card-img-top" alt=""></a>
+                <a :href="article.url" target="_blank"><img :src="article.urlToImage" class="card-img-top p-2"
+                    alt=""></a>
               </div>
 
               <!--Card content-->
@@ -58,36 +65,43 @@
 
 
 </div>
+<!-- <script>
+  jQuery(document).ready(function () {
+    jQuery('#loading');
+  });
+
+</script> -->
 <%- /* Expose server-rendered data as window.SAILS_LOCALS :: */ exposeLocalsToBrowser() %>
-<script>
+
+<!-- <script>
   new Vue({
     el: '#app',
-    data() {
-      return {
-        article: null,
-        info: null,
-        loading: true,
-        errored: false
-      }
+    // data() {
+    //   return {
+    //     // article: null,
+    //     // info: null,
+    //     loading: true,
+    //     errored: false
+    //   }
+    // },
+    data: {
+      results: []
     },
     mounted() {
-      axios
-        // .get('https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key=nWLEM7AVFZ1dZhH608fZPKqdADXT230J')
-        .get('https://newsapi.org/v2/everything?q=health&apiKey=083be1c3a4914b3fbc8134118e730ddf')
-        // .get('https://api.coindesk.com/v1/bpi/currentprice.json')
+      axios.get('https://newsapi.org/v2/everything?q=health&apiKey=083be1c3a4914b3fbc8134118e730ddf')
         .then(response => {
-          this.info = response.data.articles
+          this.results = response.data.articles
           // this.article = response.data
 
         })
         .catch(error => {
           console.log(error)
-          this.errored = true
+          // this.errored = true
         })
-        .finally(() => this.loading = false)
+      // .finally(() => this.loading = false)
     }
   })
 
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.18/vue.min.js"></script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</script> -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.18/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
