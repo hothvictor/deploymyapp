@@ -69,7 +69,7 @@ and exposed as \`req.me\`.)`
   },
 
 
-  fn: async function (inputs) {
+  fn: async function (inputs, exits) {
 
     // Look up by the email address.
     // (note that we lowercase it to ensure the lookup is always case-insensitive,
@@ -105,8 +105,10 @@ and exposed as \`req.me\`.)`
     }//ﬁ
 
     // Modify the active session instance.
-    // (This will be persisted when the response is sent.)
     this.req.session.userId = userRecord.id;
+
+    // Send success response (this is where the session actually gets persisted)
+    return exits.success();
 
   }
 

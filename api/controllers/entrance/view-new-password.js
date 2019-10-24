@@ -31,7 +31,7 @@ module.exports = {
   },
 
 
-  fn: async function (inputs) {
+  fn: async function (inputs, exits) {
 
     // If password reset token is missing, display an error page explaining that the link is bad.
     if (!inputs.token) {
@@ -47,9 +47,9 @@ module.exports = {
     }
 
     // Grab token and include it in view locals
-    return {
+    return exits.success({
       token: inputs.token
-    };
+    });
 
   }
 

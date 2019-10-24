@@ -61,6 +61,11 @@ parasails.registerPage('signup', {
         this.formErrors.fullName = true;
       }
 
+      // Validate phone:
+      if(!argins.phone) {
+        this.formErrors.phone = true;
+      }
+
       // Validate email:
       if(!argins.emailAddress || !parasails.util.isValidEmailAddress(argins.emailAddress)) {
         this.formErrors.emailAddress = true;

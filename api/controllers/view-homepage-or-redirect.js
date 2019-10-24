@@ -23,13 +23,49 @@ module.exports = {
   },
 
 
-  fn: async function () {
+  fn: async function (inputs, exits) {
+    var url = require('url');
 
-    if (this.req.me) {
-      throw {redirect:'/welcome'};
-    }
+    // if (this.req.me) {
+    //   throw {redirect:'/welcome'};
+    // }
+    var events = await Event.find().sort({
+      "id": -1
+    }).limit(1);
 
-    return {};
+    var newss = await News.find().sort({
+      "id": -1
+    }).limit(2);
+
+    var latests = await News.find().sort({
+      "id": -1
+    }).limit(3);
+
+    var hots = await News.find().sort({
+      "views": -1
+    }).limit(1);
+
+    var shops = await Shop.find({
+      status: "Approved"
+
+    }).sort({
+      "id": -1,
+
+    }).limit(3);
+
+    _.each(shops, (shop) => {
+      shop.imageSrc = url.resolve(sails.config.custom.baseUrl, '/api/v1/shop/' + shop.id);
+      delete shop.imageUploadFd;
+      delete shop.imageUploadMine;
+    })
+
+    return exits.success({
+      events,
+      newss,
+      hots,
+      latests,
+      shops
+    });
 
   }
 

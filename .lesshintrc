@@ -31,7 +31,6 @@
     "enabled": true,
     "style": "one_space"
   },
-  "maxCharPerLine": false,
   "emptyRule": false,
   "importantRule": true,
   "qualifyingElement": false

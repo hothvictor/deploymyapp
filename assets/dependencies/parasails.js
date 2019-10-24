@@ -2,7 +2,7 @@
  * parasails.js
  * (lightweight structures for apps with more than one page)
  *
- * v0.7.11
+ * v0.7.3
  *
  * Copyright 2014-present, Mike McNeil (@mikermcneil)
  * MIT License
@@ -129,30 +129,14 @@
     // or "beforeDestroyed", because those definitely aren't real things.
     var RECOMMENDATIONS_BY_UNRECOGNIZED_KEY = {
       beforeMounted: 'beforeMount',
-      beforeMounting: 'beforeMount',
       beforeDestroyed: 'beforeDestroy',
-      beforeDestroying: 'beforeDestroy',
       events: 'methods',
       functions: 'methods',
-      state: 'data',
-      virtualPageRegExp: 'virtualPagesRegExp',
-      virtualPageRegEx: 'virtualPagesRegExp',
-      virtualPagesRegEx: 'virtualPagesRegExp',
-      virtualPage: 'virtualPages',
-      html5History: 'html5HistoryMode',
-      historyMode: 'html5HistoryMode',
+      state: 'data'
     };
-    // > Note that this determination of whether to show a more precise
-    // > "Did you mean?" error message is a case-_insensitive_ check.
-    var lowercasedRecommendationsByKey = _.reduce(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY, function(memo, correctAlias, incorrectKey){
-      memo[incorrectKey.toLowerCase()] = correctAlias;
-      return memo;
-    }, {});
-    _.each(def, function (x, propertyName) {
-      if (x !== undefined) {
-        if (_.contains(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY), propertyName) || _.contains(_.keys(lowercasedRecommendationsByKey), propertyName.toLowerCase())) {
-          throw new Error('Detected unrecognized and potentially confusing key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you mean "'+lowercasedRecommendationsByKey[propertyName.toLowerCase()]+'"?');
-        }
+    _.each(_.intersection(_.keys(RECOMMENDATIONS_BY_UNRECOGNIZED_KEY),_.keys(def)), function (propertyName) {
+      if (def[propertyName] !== undefined) {
+        throw new Error('Detected unrecognized and potentially confusing key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you mean "'+RECOMMENDATIONS_BY_UNRECOGNIZED_KEY[propertyName]+'"?');
       }
     });//∞
 
@@ -166,8 +150,6 @@
     // > This is particularly useful for catching loose top-level properties
     // > that were intended to be within `data` or `methods`, etc.)
     if (currentModuleEntityNoun === 'page script' || currentModuleEntityNoun === 'component') {
-      // FUTURE: don't allow page-script only things on components
-
       var LEGAL_TOP_LVL_KEYS = [
         // Everyday page script stuff:
         'beforeMount',
@@ -242,54 +224,11 @@
         'provide',
         'inject'
       ];
-      // FUTURE: change this to a case-insensitive check to do a better job helping
-      // out a user who is trying to use e.g. "beforemount", without a capital "M"
       _.each(_.difference(_.keys(def), LEGAL_TOP_LVL_KEYS), function (propertyName) {
         if (def[propertyName] !== undefined) {
           throw new Error('Detected unrecognized key "'+propertyName+'" on the top level of '+currentModuleEntityNoun+' definition.  Did you perhaps intend for `'+propertyName+'` to be included as a nested key within `data` or `methods`?  Please check on that and try again.  If you\'re unsure, or you\'re deliberately attempting to use a Vue.js feature that relies on having a top-level property named `'+propertyName+'`, then please remove this check from the parasails.js library in your project, or drop by https://sailsjs.com/support for assistance.');
         }
       });//∞
-    }//ﬁ
-
-    // Mix in overridable default filters
-    def.filters = def.filters || {};
-    if (!def.filters.currency) {
-      // FUTURE: mix in our go-to currency filter
-    }//ﬁ
-    if (!def.filters.round) {
-      /**
-       * Usage:
-       * - `{{someValue | round}}`
-       * - `{{someValue | round(1)}}`
-       * - `{{someValue | round(2)}}`
-       * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       * @param  {Ref} value
-       * @param  {Number} accuracy
-       * @param  {Boolean} chopTrailingZeros
-       * @return {String}
-       * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       * > The following is a modified version of:
-       * > vue-round-filter@1.1.2
-       * > c. 2016, Damian Martyniak (ISC License)
-       * > https://github.com/rascada/vue-round-filter/blob/6529a384758b67ed54884b77e03dd73cc3dda215/index.js
-       * > Originally updated for explicitness, to ensure Vue ≥2.x compatibility,
-       * > and to change default usage to always preserve decimal accuracy.  It
-       * > could likely wind up with additional updates over time.
-       * > All edits are MIT licensed. Copyright (c) Mike McNeil, 2018-present
-       */
-      def.filters.round = function (value, accuracy, chopTrailingZeros) {
-        if (typeof value !== 'number') {
-          return ('' + value);
-        }//•
-        var result = value.toFixed(accuracy);
-        if (chopTrailingZeros) {
-          // (don't keep decimal accuracy, just chop off those trailing zeros)
-          return ('' + (+result));
-        } else {
-          // (keep decimal accuracy)
-          return ('' + result);
-        }
-      };//ƒ
     }//ﬁ
 
     // Wrap and verify methods:
@@ -401,7 +340,7 @@
             '<h1>Whoops</h1>'+
             '<p>'+
               '<span role="summary">An unexpected client-side error occurred.</span><br/>'+
-              '<pre>'+_.escape(_.trunc(errorSummary, {length: 350}))+'</pre>'+
+              '<pre>'+_.trunc(errorSummary, {length: 350})+'</pre>'+
               '<span>Please check your browser\'s JavaScript console for further details.</span><br/>'+
               '<small>This message will not be displayed in production.  '+
               'If you\'re unsure, <a href="https://sailsjs.com/support">ask for help</a>.</small><br/>'+
@@ -417,7 +356,6 @@
           bottom: '0',
           height: '100%',
           width: '100%',
-          'z-index': '9000',
           display: 'table',
           'background': 'radial-gradient(circle, rgba(0,0,0,0.98) 0%, rgba(35,8,8,0.87) 80%, rgba(20,5,5,0.85) 100%)',
           // (Thanks cssgradient.io!)
@@ -478,12 +416,8 @@
     //
     // For more info about `window.onerror`, see:
     // https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
-    var originalWindowOnError = window.onerror;
     window.onerror = function(message, scriptSrc, lineNo, charNo, err) {
       _displayErrorOverlay(err&&err.message? err.message : message);
-      if (_.isFunction(originalWindowOnError)) {
-        return originalWindowOnError(message, scriptSrc, lineNo, charNo, err);
-      }
     };//œ   </ on uncaught error >
 
     // Configure Vue to share its beforeMount errors (and others) with us.
@@ -640,18 +574,6 @@
       }
     };//ƒ
 
-    // Attach `goto` method, for convenience.
-    if (def.methods && def.methods.goto) { throw new Error('Component definition contains `methods` with a `goto` key-- but you\'re not allowed to override that'); }
-    def.methods = def.methods || {};
-    if (VueRouter) {
-      def.methods.goto = function (rootRelativeUrl){
-        window.location = rootRelativeUrl;
-      };
-    }
-    else {
-      def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this component was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
-    }
-
     // Finally, register as a global Vue component.
     Vue.component(componentName, def);
 
@@ -709,12 +631,6 @@
     // Spinlock
     if (didAlreadyLoadPageScript) { throw new Error('Cannot load page script (`'+pageName+') because a page script has already been loaded on this page.'); }
     didAlreadyLoadPageScript = true;
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // TODO: Set `parasails._mountedPage = pageName;` and use that in the `goto` method of components to still do the
-    // check for a virtualPageRegExp and allow it to conditionaly do a "soft" client-side navigation to avoid page reload.
-    // (Remember: There's only ever one registered page script mounted in the DOM when you're using parasails.)
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     // Automatically set `el`
     if (def.el) { throw new Error('Page script definition contains `el`, but you\'re not allowed to override that'); }
@@ -804,9 +720,7 @@
     if (VueRouter) {
       var _virtualPagesRegExp = def.virtualPagesRegExp;
       def.methods.goto = function (rootRelativeUrlOrOpts){
-        // FUTURE: add support for using '../' without reloading the page
-        // (even though it doesn't technicaly match the regexp)
-        if (!_virtualPagesRegExp || (_.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp))) {
+        if (_virtualPagesRegExp && _.isString(rootRelativeUrlOrOpts) && !rootRelativeUrlOrOpts.match(_virtualPagesRegExp)) {
           window.location = rootRelativeUrlOrOpts;
         } else {
           return this.$router.push(rootRelativeUrlOrOpts);
@@ -817,177 +731,160 @@
       def.methods.goto = function (){ throw new Error('Cannot use .goto() method because, at the time when this page script was registered, VueRouter did not exist on the page yet. (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure VueRouter is getting brought in before `parasails`.)'); };
     }
 
-    // If virtualPages-related stuff was specified, check usage and tolerate shorthand.
-    if (def.virtualPages === undefined) {
-      if (def.virtualPagesRegExp) {
-        def.virtualPages = true;
-      }
-    } else if (_.isObject(def.virtualPages) && !_.isArray(def.virtualPages) && !_.isFunction(def.virtualPages)) {
-      throw new Error('This usage of `virtualPages` (as a dictionary) is no longer supported.  Instead, please use `virtualPages: true`.  [?] https://sailsjs.com/support');
-      // (^^ old implementation removed in https://github.com/mikermcneil/parasails/commit/20af5992097de788b58ae2cb517675f235798879)
-    } else if (!_.isBoolean(def.virtualPages)) {
-      throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
-    }//ﬁ
+    // If virtualPages was specified, check usage and then...
     if (def.virtualPages && def.router) { throw new Error('Cannot specify both `virtualPages` AND an actual Vue `router`!  Use one or the other.'); }
     if (def.router && !VueRouter) { throw new Error('Cannot use `router`, because that depends on the Vue Router.  But `VueRouter` does not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the VueRouter plugin is getting brought in before `parasails`.)'); }
     if (!def.virtualPages && def.html5HistoryMode !== undefined) { throw new Error('Cannot specify `html5HistoryMode` without also specifying `virtualPages`!'); }
     if (!def.virtualPages && def.beforeEach !== undefined) { throw new Error('Cannot specify `beforeEach` without also specifying `virtualPages`!'); }
     if ((def.beforeNavigate || def.afterNavigate) && def.virtualPages !== true) { throw new Error('Cannot specify `beforeNavigate` or `afterNavigate` unless you set `virtualPages: true`!'); }
-
-    // If `virtualPages: true` was specified, then use reasonable defaults:
-    //
-    // > Note: This assumes that, somewhere within the parent page's template, there is:
-    // > ```
-    // > <router-view></router-view>
-    // > ```
-    if (def.virtualPages === true) {
+    if (def.virtualPages !== undefined) {
       if (!VueRouter) { throw new Error('Cannot use `virtualPages`, because it depends on the Vue Router.  But `VueRouter` does not exist on the page yet.  (If you\'re using Sails, please check dependency loading order in pipeline.js and make sure the VueRouter plugin is getting brought in before `parasails`.)'); }
-      if (def.beforeEach !== undefined) { throw new Error('Cannot specify `virtualPages: true` AND `beforeEach` at the same time!'); }
-      if (!def.virtualPagesRegExp && def.html5HistoryMode === 'history') { throw new Error('If `html5HistoryMode: \'history\'` is specified, then virtualPagesRegExp must also be specified!'); }
-      if (def.virtualPagesRegExp && !_.isRegExp(def.virtualPagesRegExp)) { throw new Error('Invalid `virtualPagesRegExp`: If specified, this must be a regular expression -- e.g. `/^\/manage\/access\/?([^\/]+)?/`'); }
-      if (def.html5HistoryMode === undefined) {
-        if (def.virtualPagesRegExp) {
-          def.html5HistoryMode = 'history';
-        } else {
-          def.html5HistoryMode = 'hash';
-        }
-      } else if (def.html5HistoryMode !== 'history' && def.html5HistoryMode !== 'hash') { throw new Error('Invalid `html5HistoryMode`: If specified, this must be either "history" or "hash".'); }
-
-      // Check for <router-view> element
-      // (to provide a better error msg if it was omitted)
-      var customBeforeMountLC;
-      if (def.beforeMount) {
-        customBeforeMountLC = def.beforeMount;
-      }//ﬁ
-      def.beforeMount = function(){
-
-        // Inject additional code to check for <router-view> element:
-        // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
-        if (this.$find('router-view').length === 0) {
-          throw new Error(
-            'Cannot mount this page with `virtualPages: true` because no '+
-            '<router-view> element exists in this page\'s HTML.\n'+
-            'Please be sure the HTML includes:\n'+
-            '\n'+
-            '```\n'+
-            '<router-view></router-view>\n'+
-            '```\n'
-          );
-        }//•
-
-        // Then call the original, custom "beforeMount" function, if there was one.
-        if (customBeforeMountLC) {
-          customBeforeMountLC.apply(this, []);
-        }
-      };//ƒ
-
-      if (def.methods._handleVirtualNavigation) {
-        throw new Error('Could not use `virtualPages: true`, because a conflicting `_handleVirtualNavigation` method is defined.  Please remove it, or do something else.');
-      }
-
-      // Set up local variables to refer to things in `def`, since it will be changing below.
-      var pathMatchingRegExp;
-      if (def.html5HistoryMode === 'history') {
-        pathMatchingRegExp = def.virtualPagesRegExp;
-      } else {
-        pathMatchingRegExp = /.*/;
-      }
-
-      var beforeNavigate = def.beforeNavigate;
-      var afterNavigate = def.afterNavigate;
-
-      // Now modify the definition's methods and remove all relevant top-level props understood
-      // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
-      // parasails features beyond the expected usage.
-      def.methods = _.extend(def.methods||{}, {
-        _handleVirtualNavigation: function(virtualPageSlug){
-
-          if (beforeNavigate) {
-            var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
-            if (resultFromBeforeNavigate === false) {
-              return false;
-            }//•
-          }
-
-          this.virtualPageSlug = virtualPageSlug;
-
-          // console.log('navigate!  Got:', arguments);
-          // console.log('Navigated. (Set `this.virtualPageSlug=\''+virtualPageSlug+'\'`)');
-
-          if (afterNavigate) {
-            afterNavigate.apply(this, [ virtualPageSlug ]);
-          }
-
-        }
-      });
-
-      // Automatically attach `virtualPageSlug` to `data`, for convenience.
-      if (def.data && def.data.virtualPageSlug !== undefined && !_.isString(def.data.virtualPageSlug)) {
-        throw new Error('Page script definition contains `data` with a `virtualPageSlug` key, but you\'re not allowed to set that yourself unless you use a string.  (And this is set to a non-string value: '+def.data.virtualPageSlug+')');
-      } else if (def.data && def.data.virtualPageSlug === undefined) {
-        def.data = _.extend({
-          virtualPageSlug: undefined
-        }, def.data||{});
-      }//ﬁ
 
       // Now we'll replace `virtualPages` in our def with the thing that VueRouter actually expects:
-      def = _.extend({
-        router: new VueRouter({
-          mode: def.html5HistoryMode,
-          routes: [
-            {
-              path: '*',
-              component: (function(){
-                var vueComponentDef = {
-                  render: function(){},
-                  beforeRouteUpdate: function (to,from,next){
-                    // this.$emit('navigate', to.path); <<old way
-                    var path = to.path;
-                    var matches = path.match(pathMatchingRegExp);
-                    if (!matches) {
-                      var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
-                      err.code = 'E_DID_NOT_MATCH_REGEXP';
-                      throw err;
-                    }//•
 
-                    // console.log('this.$parent', this.$parent);
-                    this.$parent._handleVirtualNavigation(matches[1]||'');
-                    // this.$emit('navigate', {
-                    //   rawPath: path,
-                    //   virtualPageSlug: matches[1]||''
-                    // });
-                    return next();
-                  },
-                  mounted: function(){
-                    // this.$emit('navigate', this.$route.path); <<old way
-                    var path = this.$route.path;
-                    var matches = path.match(pathMatchingRegExp);
-                    if (!matches) {
-                      var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
-                      err.code = 'E_DID_NOT_MATCH_REGEXP';
-                      throw err;
-                    }//•
+      // If `virtualPages: true` was specified, then use reasonable defaults:
+      //
+      // > Note: This assumes that, somewhere within the parent page's template, there is:
+      // > ```
+      // > <router-view></router-view>
+      // > ```
+      if (def.virtualPages === true) {
+        if (def.beforeEach !== undefined) { throw new Error('Cannot specify `virtualPages: true` AND `beforeEach` at the same time!'); }
+        if (!def.virtualPagesRegExp && def.html5HistoryMode === 'history') { throw new Error('If `html5HistoryMode: \'history\'` is specified, then virtualPagesRegExp must also be specified!'); }
+        if (def.virtualPagesRegExp && !_.isRegExp(def.virtualPagesRegExp)) { throw new Error('Invalid `virtualPagesRegExp`: If specified, this must be a regular expression -- e.g. `/^\/manage\/access\/?([^\/]+)?/`'); }
 
-                    this.$parent._handleVirtualNavigation(matches[1]||'');
-                    // this.$emit('navigate', {
-                    //   rawPath: path,
-                    //   virtualPageSlug: matches[1]||''
-                    // });
-                  }
-                };
-                // Expose extra methods on virtual page script, if jQuery is available.
-                _exposeBonusMethods(vueComponentDef, 'virtual page');
+        // Check for <router-view> element
+        // (to provide a better error msg if it was omitted)
+        var customBeforeMountLC;
+        if (def.beforeMount) {
+          customBeforeMountLC = def.beforeMount;
+        }//ﬁ
+        def.beforeMount = function(){
 
-                // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
-                _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
+          // Inject additional code to check for <router-view> element:
+          // console.log('this.$find(\'router-view\').length', this.$find('router-view').length);
+          if (this.$find('router-view').length === 0) {
+            throw new Error(
+              'Cannot mount this page with `virtualPages: true` because no '+
+              '<router-view> element exists in this page\'s HTML.\n'+
+              'Please be sure the HTML includes:\n'+
+              '\n'+
+              '```\n'+
+              '<router-view></router-view>\n'+
+              '```\n'
+            );
+          }//•
 
-                return vueComponentDef;
-              })()
+          // Then call the original, custom "beforeMount" function, if there was one.
+          if (customBeforeMountLC) {
+            customBeforeMountLC.apply(this, []);
+          }
+        };//ƒ
+
+        if (def.methods._handleVirtualNavigation) {
+          throw new Error('Could not use `virtualPages: true`, because a conflicting `_handleVirtualNavigation` method is defined.  Please remove it, or do something else.');
+        }
+
+        // Set up local variables to refer to things in `def`, since it will be changing below.
+        var pathMatchingRegExp;
+        if (def.html5HistoryMode === 'history') {
+          pathMatchingRegExp = def.virtualPagesRegExp;
+        } else {
+          pathMatchingRegExp = /.*/;
+        }
+
+        var beforeNavigate = def.beforeNavigate;
+        var afterNavigate = def.afterNavigate;
+
+        // Now modify the definition's methods and remove all relevant top-level props understood
+        // by parasails (but not by Vue.js) to avoid creating any weird additional dependence on
+        // parasails features beyond the expected usage.
+
+        def.methods = _.extend(def.methods||{}, {
+          _handleVirtualNavigation: function(virtualPageSlug){
+
+            if (beforeNavigate) {
+              var resultFromBeforeNavigate = beforeNavigate.apply(this, [ virtualPageSlug ]);
+              if (resultFromBeforeNavigate === false) {
+                return false;
+              }//•
             }
-          ],
-        })
-      }, _.omit(def, ['virtualPages', 'virtualPagesRegExp', 'html5HistoryMode', 'beforeNavigate', 'afterNavigate']));
-    }//ﬁ  </ def has `virtualPages` enabled >
+
+            this.virtualPageSlug = virtualPageSlug;
+
+            // console.log('navigate!  Got:', arguments);
+            // console.log('Navigated. (Set `this.virtualPageSlug=\''+virtualPageSlug+'\'`)');
+
+            if (afterNavigate) {
+              afterNavigate.apply(this, [ virtualPageSlug ]);
+            }
+
+          }
+        });
+
+        def = _.extend({
+          router: new VueRouter({
+            mode: def.html5HistoryMode || 'hash',
+            routes: [
+              {
+                path: '*',
+                component: (function(){
+                  var vueComponentDef = {
+                    render: function(){},
+                    beforeRouteUpdate: function (to,from,next){
+                      // this.$emit('navigate', to.path); <<old way
+                      var path = to.path;
+                      var matches = path.match(pathMatchingRegExp);
+                      if (!matches) {
+                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                        err.code = 'E_DID_NOT_MATCH_REGEXP';
+                        throw err;
+                      }//•
+
+                      // console.log('this.$parent', this.$parent);
+                      this.$parent._handleVirtualNavigation(matches[1]||'');
+                      // this.$emit('navigate', {
+                      //   rawPath: path,
+                      //   virtualPageSlug: matches[1]||''
+                      // });
+                      return next();
+                    },
+                    mounted: function(){
+                      // this.$emit('navigate', this.$route.path); <<old way
+                      var path = this.$route.path;
+                      var matches = path.match(pathMatchingRegExp);
+                      if (!matches) {
+                        var err =new Error('Could not match current URL path (`'+path+'`) as a virtual page.  Please check the `virtualPagesRegExp` -- e.g. `/^\/foo\/bar\/?([^\/]+)?/`');
+                        err.code = 'E_DID_NOT_MATCH_REGEXP';
+                        throw err;
+                      }//•
+
+                      this.$parent._handleVirtualNavigation(matches[1]||'');
+                      // this.$emit('navigate', {
+                      //   rawPath: path,
+                      //   virtualPageSlug: matches[1]||''
+                      // });
+                    }
+                  };
+                  // Expose extra methods on virtual page script, if jQuery is available.
+                  _exposeBonusMethods(vueComponentDef, 'virtual page');
+
+                  // Make sure none of the specified Vue methods are defined with any naughty arrow functions.
+                  _wrapMethodsAndVerifyNoArrowFunctions(vueComponentDef, 'virtual page');
+
+                  return vueComponentDef;
+                })()
+              }
+            ],
+          })
+        }, _.omit(def, ['virtualPages', 'virtualPagesRegExp', 'html5HistoryMode', 'beforeNavigate', 'afterNavigate']));
+      } else if (_.isObject(def.virtualPages) && !_.isArray(def.virtualPages) && !_.isFunction(def.virtualPages)) {
+        throw new Error('This usage of `virtualPages` (as a dictionary) is no longer supported.  Instead, please use `virtualPages: true`.  [?] https://sailsjs.com/support');
+        // (old implementation removed in https://github.com/mikermcneil/parasails/commit/20af5992097de788b58ae2cb517675f235798879)
+      } else {
+        throw new Error('Cannot use `virtualPages` because the specified value doesn\'t match any recognized meaning.  Please specify either `true` (for the default handling) or a dictionary of client-side routing rules.');
+      }
+    }//ﬁ  </ def has `virtualPages` >
 
     // Construct Vue instance for this page script.
     var vm = new Vue(def);

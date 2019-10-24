@@ -12,32 +12,18 @@ module.exports = {
     //  ╠═╝╠╦╝║║║║║ ║ ║╚╗╔╝║╣ ╚═╗
     //  ╩  ╩╚═╩╩ ╩╩ ╩ ╩ ╚╝ ╚═╝╚═╝
 
+    phone: {
+      type: 'number',
+      required: true
+    },
+
     emailAddress: {
       type: 'string',
       required: true,
       unique: true,
       isEmail: true,
       maxLength: 200,
-      example: 'mary.sue@example.com'
-    },
-
-    emailStatus: {
-      type: 'string',
-      isIn: ['unconfirmed', 'change-requested', 'confirmed'],
-      defaultsTo: 'confirmed',
-      description: 'The confirmation status of the user\'s email address.',
-      extendedDescription:
-`Users might be created as "unconfirmed" (e.g. normal signup) or as "confirmed" (e.g. hard-coded
-admin users).  When the email verification feature is enabled, new users created via the
-signup form have \`emailStatus: 'unconfirmed'\` until they click the link in the confirmation email.
-Similarly, when an existing user changes their email address, they switch to the "change-requested"
-email status until they click the link in the confirmation email.`
-    },
-
-    emailChangeCandidate: {
-      type: 'string',
-      isEmail: true,
-      description: 'A still-unconfirmed email address that this user wants to change to (if relevant).'
+      example: 'carol.reyna@microsoft.com'
     },
 
     password: {
@@ -51,16 +37,15 @@ email status until they click the link in the confirmation email.`
     fullName: {
       type: 'string',
       required: true,
-      description: 'Full representation of the user\'s name.',
+      description: 'Full representation of the user\'s name',
       maxLength: 120,
-      example: 'Mary Sue van der McHenst'
+      example: 'Lisa Microwave van der Jenny'
     },
 
     isSuperAdmin: {
       type: 'boolean',
       description: 'Whether this user is a "super admin" with extra permissions, etc.',
-      extendedDescription:
-`Super admins might have extra permissions, see a different default home page when they log in,
+      extendedDescription: `Super admins might have extra permissions, see a different default home page when they log in,
 or even have a completely different feature set from normal users.  In this app, the \`isSuperAdmin\`
 flag is just here as a simple way to represent two different kinds of users.  Usually, it's a good idea
 to keep the data model as simple as possible, only adding attributes when you actually need them for
@@ -85,31 +70,18 @@ So, while this \`isSuperAdmin\` demarcation might not be the right approach fore
       example: 1502844074211
     },
 
-    emailProofToken: {
-      type: 'string',
-      description: 'A pseudorandom, probabilistically-unique token for use in our account verification emails.'
-    },
-
-    emailProofTokenExpiresAt: {
-      type: 'number',
-      description: 'A JS timestamp (epoch ms) representing the moment when this user\'s `emailProofToken` will expire (or 0 if the user currently has no such token).',
-      example: 1502844074211
-    },
-
     stripeCustomerId: {
       type: 'string',
       protect: true,
       description: 'The id of the customer entry in Stripe associated with this user (or empty string if this user is not linked to a Stripe customer -- e.g. if billing features are not enabled).',
-      extendedDescription:
-`Just because this value is set doesn't necessarily mean that this user has a billing card.
+      extendedDescription: `Just because this value is set doesn't necessarily mean that this user has a billing card.
 It just means they have a customer entry in Stripe, which might or might not have a billing card.`
     },
 
     hasBillingCard: {
       type: 'boolean',
       description: 'Whether this user has a default billing card hooked up as their payment method.',
-      extendedDescription:
-`More specifically, this indcates whether this user record's linked customer entry in Stripe has
+      extendedDescription: `More specifically, this indcates whether this user record's linked customer entry in Stripe has
 a default payment source (i.e. credit card).  Note that a user have a \`stripeCustomerId\`
 without necessarily having a billing card.`
     },
@@ -142,6 +114,34 @@ without necessarily having a billing card.`
       extendedDescription: 'To ensure PCI compliance, this data comes from Stripe, where it reflects the user\'s default payment source.'
     },
 
+    emailProofToken: {
+      type: 'string',
+      description: 'A pseudorandom, probabilistically-unique token for use in our account verification emails.'
+    },
+
+    emailProofTokenExpiresAt: {
+      type: 'number',
+      description: 'A JS timestamp (epoch ms) representing the moment when this user\'s `emailProofToken` will expire (or 0 if the user currently has no such token).',
+      example: 1502844074211
+    },
+
+    emailStatus: {
+      type: 'string',
+      isIn: ['unconfirmed', 'changeRequested', 'confirmed'],
+      defaultsTo: 'confirmed',
+      description: 'The confirmation status of the user\'s email address.',
+      extendedDescription: `Users might be created as "unconfirmed" (e.g. normal signup) or as "confirmed" (e.g. hard-coded
+admin users).  When the email verification feature is enabled, new users created via the
+signup form have \`emailStatus: 'unconfirmed'\` until they click the link in the confirmation email.
+Similarly, when an existing user changes their email address, they switch to the "changeRequested"
+email status until they click the link in the confirmation email.`
+    },
+
+    emailChangeCandidate: {
+      type: 'string',
+      description: 'The (still-unconfirmed) email address that this user wants to change to.'
+    },
+
     tosAcceptedByIp: {
       type: 'string',
       description: 'The IP (ipv4) address of the request that accepted the terms of service.',
@@ -164,6 +164,26 @@ without necessarily having a billing card.`
     //  ╠═╣╚═╗╚═╗║ ║║  ║╠═╣ ║ ║║ ║║║║╚═╗
     //  ╩ ╩╚═╝╚═╝╚═╝╚═╝╩╩ ╩ ╩ ╩╚═╝╝╚╝╚═╝
     // n/a
+    shopOwner: {
+      type: 'string',
+      isIn: ['No', 'Yes'],
+
+    },
+
+    subscribe: {
+      type: 'string',
+      isIn: ['No', 'Yes'],
+
+    },
+
+    shopNo: {
+      type: 'number',
+
+    },
+
+    friends: {
+      collection: 'User'
+    }
 
   },
 

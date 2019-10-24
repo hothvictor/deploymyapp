@@ -27,10 +27,6 @@ module.exports = {
 
   exits: {
 
-    success: {
-      description: 'Password successfully updated, and requesting user agent is now logged in.'
-    },
-
     invalidToken: {
       description: 'The provided password token is invalid, expired, or has already been used.',
       responseType: 'expired'
@@ -39,7 +35,7 @@ module.exports = {
   },
 
 
-  fn: async function (inputs) {
+  fn: async function (inputs, exits) {
 
     if(!inputs.token) {
       throw 'invalidToken';
@@ -57,16 +53,16 @@ module.exports = {
     var hashed = await sails.helpers.passwords.hashPassword(inputs.password);
 
     // Store the user's new password and clear their reset token so it can't be used again.
-    await User.updateOne({ id: userRecord.id })
-    .set({
+    await User.update({ id: userRecord.id }).set({
       password: hashed,
       passwordResetToken: '',
       passwordResetTokenExpiresAt: 0
     });
 
     // Log the user in.
-    // (This will be persisted when the response is sent.)
     this.req.session.userId = userRecord.id;
+
+    return exits.success();
 
   }
 

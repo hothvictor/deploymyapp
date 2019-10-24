@@ -53,7 +53,7 @@ parasails.registerPage('edit-profile', {
 
       // Validate name:
       if(!argins.fullName) {
-        this.formErrors.fullName = true;
+        this.formErrors.password = true;
       }
 
       // Validate email:

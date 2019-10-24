@@ -30,7 +30,7 @@ module.exports = {
   },
 
 
-  fn: async function (inputs) {
+  fn: async function (inputs, exits) {
 
     var newEmailAddress = inputs.emailAddress;
     if (newEmailAddress !== undefined) {
@@ -40,26 +40,26 @@ module.exports = {
     // Determine if this request wants to change the current user's email address,
     // revert her pending email address change, modify her pending email address
     // change, or if the email address won't be affected at all.
-    var desiredEmailEffect;// ('change-immediately', 'begin-change', 'cancel-pending-change', 'modify-pending-change', or '')
+    var desiredEffectReEmail;// ('changeImmediately', 'beginChange', 'cancelPendingChange', 'modifyPendingChange', or '')
     if (
       newEmailAddress === undefined ||
-      (this.req.me.emailStatus !== 'change-requested' && newEmailAddress === this.req.me.emailAddress) ||
-      (this.req.me.emailStatus === 'change-requested' && newEmailAddress === this.req.me.emailChangeCandidate)
+      (this.req.me.emailStatus !== 'changeRequested' && newEmailAddress === this.req.me.emailAddress) ||
+      (this.req.me.emailStatus === 'changeRequested' && newEmailAddress === this.req.me.emailChangeCandidate)
     ) {
-      desiredEmailEffect = '';
-    } else if (this.req.me.emailStatus === 'change-requested' && newEmailAddress === this.req.me.emailAddress) {
-      desiredEmailEffect = 'cancel-pending-change';
-    } else if (this.req.me.emailStatus === 'change-requested' && newEmailAddress !== this.req.me.emailAddress) {
-      desiredEmailEffect = 'modify-pending-change';
+      desiredEffectReEmail = '';
+    } else if (this.req.me.emailStatus === 'changeRequested' && newEmailAddress === this.req.me.emailAddress) {
+      desiredEffectReEmail = 'cancelPendingChange';
+    } else if (this.req.me.emailStatus === 'changeRequested' && newEmailAddress !== this.req.me.emailAddress) {
+      desiredEffectReEmail = 'modifyPendingChange';
     } else if (!sails.config.custom.verifyEmailAddresses || this.req.me.emailStatus === 'unconfirmed') {
-      desiredEmailEffect = 'change-immediately';
+      desiredEffectReEmail = 'changeImmediately';
     } else {
-      desiredEmailEffect = 'begin-change';
+      desiredEffectReEmail = 'beginChange';
     }
 
 
     // If the email address is changing, make sure it is not already being used.
-    if (_.contains(['begin-change', 'change-immediately', 'modify-pending-change'], desiredEmailEffect)) {
+    if (_.contains(['beginChange', 'changeImmediately', 'modifyPendingChange'], desiredEffectReEmail)) {
       let conflictingUser = await User.findOne({
         or: [
           { emailAddress: newEmailAddress },
@@ -78,11 +78,11 @@ module.exports = {
       fullName: inputs.fullName,
     };
 
-    switch (desiredEmailEffect) {
+    switch (desiredEffectReEmail) {
 
       // Change now
-      case 'change-immediately':
-        _.extend(valuesToSet, {
+      case 'changeImmediately':
+        Object.assign(valuesToSet, {
           emailAddress: newEmailAddress,
           emailChangeCandidate: '',
           emailProofToken: '',
@@ -92,19 +92,19 @@ module.exports = {
         break;
 
       // Begin new email change, or modify a pending email change
-      case 'begin-change':
-      case 'modify-pending-change':
-        _.extend(valuesToSet, {
+      case 'beginChange':
+      case 'modifyPendingChange':
+        Object.assign(valuesToSet, {
           emailChangeCandidate: newEmailAddress,
           emailProofToken: await sails.helpers.strings.random('url-friendly'),
           emailProofTokenExpiresAt: Date.now() + sails.config.custom.emailProofTokenTTL,
-          emailStatus: 'change-requested'
+          emailStatus: 'changeRequested'
         });
         break;
 
       // Cancel pending email change
-      case 'cancel-pending-change':
-        _.extend(valuesToSet, {
+      case 'cancelPendingChange':
+        Object.assign(valuesToSet, {
           emailChangeCandidate: '',
           emailProofToken: '',
           emailProofTokenExpiresAt: 0,
@@ -116,8 +116,7 @@ module.exports = {
     }
 
     // Save to the db
-    await User.updateOne({id: this.req.me.id })
-    .set(valuesToSet);
+    await User.update({id: this.req.me.id }).set(valuesToSet);
 
     // If this is an immediate change, and billing features are enabled,
     // then also update the billing email for this user's linked customer entry
@@ -126,15 +125,14 @@ module.exports = {
     // > then one will be set up implicitly, so we'll need to persist it to our
     // > database.  (This could happen if Stripe credentials were not configured
     // > at the time this user was originally created.)
-    if(desiredEmailEffect === 'change-immediately' && sails.config.custom.enableBillingFeatures) {
+    if(desiredEffectReEmail === 'changeImmediately' && sails.config.custom.enableBillingFeatures) {
       let didNotAlreadyHaveCustomerId = (! this.req.me.stripeCustomerId);
       let stripeCustomerId = await sails.helpers.stripe.saveBillingInfo.with({
         stripeCustomerId: this.req.me.stripeCustomerId,
         emailAddress: newEmailAddress
-      }).timeout(5000).retry();
+      });
       if (didNotAlreadyHaveCustomerId){
-        await User.updateOne({ id: this.req.me.id })
-        .set({
+        await User.update({ id: this.req.me.id }).set({
           stripeCustomerId
         });
       }
@@ -142,7 +140,7 @@ module.exports = {
 
     // If an email address change was requested, and re-confirmation is required,
     // send the "confirm account" email.
-    if (desiredEmailEffect === 'begin-change' || desiredEmailEffect === 'modify-pending-change') {
+    if (desiredEffectReEmail === 'beginChange' || desiredEffectReEmail === 'modifyPendingChange') {
       await sails.helpers.sendTemplateEmail.with({
         to: newEmailAddress,
         subject: 'Your account has been updated',
@@ -153,6 +151,8 @@ module.exports = {
         }
       });
     }
+
+    return exits.success();
 
   }
 

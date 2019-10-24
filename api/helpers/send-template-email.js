@@ -7,43 +7,47 @@ module.exports = {
   description: 'Send an email using a template.',
 
 
-  extendedDescription: 'To ease testing and development, if the provided "to" email address ends in "@example.com", '+
-    'then the email message will be written to the terminal instead of actually being sent.'+
-    '(Thanks [@simonratner](https://github.com/simonratner)!)',
+  extendedDescription:
+`To ease testing and development, if the provided "to" email address ends in "@example.com",
+then the email message will be written to the terminal instead of actually being sent.
+(Thanks [@simonratner](https://github.com/simonratner)!)`,
 
 
   inputs: {
 
     template: {
       description: 'The relative path to an EJS template within our `views/emails/` folder -- WITHOUT the file extension.',
-      extendedDescription: 'Use strings like "foo" or "foo/bar", but NEVER "foo/bar.ejs".  For example, '+
-        '"marketing/welcome" would send an email using the "views/emails/marketing/welcome.ejs" template.',
-      example: 'email-reset-password',
+      extendedDescription:
+`Use strings like "foo" or "foo/bar", but NEVER "foo/bar.ejs".  For example, "marketing/welcome" would send an email
+using the "views/emails/marketing/welcome.ejs" template.`,
+      example: 'reset-password',
       type: 'string',
       required: true
     },
 
     templateData: {
       description: 'A dictionary of data which will be accessible in the EJS template.',
-      extendedDescription: 'Each key will be a local variable accessible in the template.  For instance, if you supply '+
-        'a dictionary with a \`friends\` key, and \`friends\` is an array like \`[{name:"Chandra"}, {name:"Mary"}]\`),'+
-        'then you will be able to access \`friends\` from the template:\n'+
-        '\`\`\`\n'+
-        '<ul>\n'+
-         '<% for (friend of friends){ %><li><%= friend.name %></li><% }); %>\n'+
-        '</ul>\n'+
-        '\`\`\`'+
-        '\n'+
-        'This is EJS, so use \`<%= %>\` to inject the HTML-escaped content of a variable, \`<%= %>\` to skip HTML-escaping '+
-        'and inject the data as-is, or \`<% %>\` to execute some JavaScript code such as an \`if\` statement or \`for\` loop.',
+      extendedDescription:
+`Each key will be a local variable accessible in the template.  For instance, if you supply
+a dictionary with a \`friends\` key, and \`friends\` is an array like \`[{name:"Chandra"}, {name:"Mary"}]\`),
+then you will be able to access \`friends\` from the template:
+\`\`\`
+<ul><% for (friend of friends){ %>
+  <li><%= friend.name %></li><% }); %></ul>
+\`\`\`
+
+This is EJS, so use \`<%= %>\` to inject the HTML-escaped content of a variable,
+\`<%= %>\` to skip HTML-escaping and inject the data as-is, or \`<% %>\` to execute
+some JavaScript code such as an \`if\` statement or \`for\` loop.`,
       type: {},
       defaultsTo: {}
     },
 
     to: {
       description: 'The email address of the primary recipient.',
-      extendedDescription: 'If this is any address ending in "@example.com", then don\'t actually deliver the message. '+
-        'Instead, just log it to the console.',
+      extendedDescription:
+`If this is any address ending in "@example.com", then don't actually deliver the message.
+Instead, just log it to the console.`,
       example: 'foo@bar.com',
       required: true
     },
@@ -55,17 +59,11 @@ module.exports = {
     },
 
     layout: {
-      description: 'Set to `false` to disable layouts altogether, or provide the path (relative '+
-        'from `views/layouts/`) to an override email layout.',
+      description:
+      'Set to `false` to disable layouts altogether, or provide the path (relative '+
+      'from `views/layouts/`) to an override email layout.',
       defaultsTo: 'layout-email',
       custom: (layout)=>layout===false || _.isString(layout)
-    },
-
-    ensureAck: {
-      description: 'Whether to wait for acknowledgement (to hear back) that the email was successfully sent (or at least queued for sending) before returning.',
-      extendedDescription: 'Otherwise by default, this returns immediately and delivers the request to deliver this email in the background.',
-      type: 'boolean',
-      defaultsTo: false
     }
 
   },
@@ -84,7 +82,7 @@ module.exports = {
   },
 
 
-  fn: async function(inputs) {
+  fn: async function(inputs, exits) {
 
     var path = require('path');
     var url = require('url');
@@ -129,7 +127,7 @@ module.exports = {
     // > `util` package (for dumping debug data in internal emails).
     var htmlEmailContents = await sails.renderView(
       emailTemplatePath,
-      _.extend({layout, url, util }, inputs.templateData)
+      Object.assign({layout, url, util }, inputs.templateData)
     )
     .intercept((err)=>{
       err.message =
@@ -151,89 +149,64 @@ module.exports = {
 
     // If that's the case, or if we're in the "test" environment, then log
     // the email instead of sending it:
-    var dontActuallySend = (
-      sails.config.environment === 'test' || isToAddressConsideredFake
-    );
-    if (dontActuallySend) {
+    if (sails.config.environment === 'test' || isToAddressConsideredFake) {
       sails.log(
-        'Skipped sending email, either because the "To" email address ended in "@example.com"\n'+
-        'or because the current \`sails.config.environment\` is set to "test".\n'+
-        '\n'+
-        'But anyway, here is what WOULD have been sent:\n'+
-        '-=-=-=-=-=-=-=-=-=-=-=-=-= Email log =-=-=-=-=-=-=-=-=-=-=-=-=-\n'+
-        'To: '+inputs.to+'\n'+
-        'Subject: '+inputs.subject+'\n'+
-        '\n'+
-        'Body:\n'+
-        htmlEmailContents+'\n'+
-        '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
-      );
+`Skipped sending email, either because the "To" email address ended in "@example.com"
+or because the current \`sails.config.environment\` is set to "test".
+
+But anyway, here is what WOULD have been sent:
+-=-=-=-=-=-=-=-=-=-=-=-=-= Email log =-=-=-=-=-=-=-=-=-=-=-=-=-
+To: ${inputs.to}
+Subject: ${inputs.subject}
+
+Body:
+${htmlEmailContents}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-`);
     } else {
       // Otherwise, we'll check that all required Mailgun credentials are set up
       // and, if so, continue to actually send the email.
 
       if (!sails.config.custom.mailgunSecret || !sails.config.custom.mailgunDomain) {
-        throw new Error(
-          'Cannot deliver email to "'+inputs.to+'" because:\n'+
-          (()=>{
-            let problems = [];
-            if (!sails.config.custom.mailgunSecret) {
-              problems.push(' • Mailgun secret is missing from this app\'s configuration (`sails.config.custom.mailgunSecret`)');
-            }
-            if (!sails.config.custom.mailgunDomain) {
-              problems.push(' • Mailgun domain is missing from this app\'s configuration (`sails.config.custom.mailgunDomain`)');
-            }
-            return problems.join('\n');
-          })()+
-          '\n'+
-          'To resolve these configuration issues, add the missing config variables to\n'+
-          '\`config/custom.js\`-- or in staging/production, set them up as system\n'+
-          'environment vars.  (If you don\'t have a Mailgun domain or secret, you can\n'+
-          'sign up for free at https://mailgun.com to receive sandbox credentials.)\n'+
-          '\n'+
-          '> Note that, for convenience during development, there is another alternative:\n'+
-          '> In lieu of setting up real Mailgun credentials, you can "fake" email\n'+
-          '> delivery by using any email address that ends in "@example.com".  This will\n'+
-          '> write automated emails to your logs rather than actually sending them.\n'+
-          '> (To simulate clicking on a link from an email, just copy and paste the link\n'+
-          '> from the terminal output into your browser.)\n'+
-          '\n'+
-          '[?] If you\'re unsure, visit https://sailsjs.com/support'
+        throw new Error(`Cannot deliver email to "${inputs.to}" because:
+        `+(()=>{
+          let problems = [];
+          if (!sails.config.custom.mailgunSecret) {
+            problems.push(' • Mailgun secret is missing from this app\'s configuration (`sails.config.custom.mailgunSecret`)');
+          }
+          if (!sails.config.custom.mailgunDomain) {
+            problems.push(' • Mailgun domain is missing from this app\'s configuration (`sails.config.custom.mailgunDomain`)');
+          }
+          return problems.join('\n');
+        })()+`
+
+To resolve these configuration issues, add the missing config variables to
+\`config/custom.js\`-- or in staging/production, set them up as system
+environment vars.  (If you don\'t have a Mailgun domain or secret, you can
+sign up for free at https://mailgun.com to receive sandbox credentials.)
+
+> Note that, for convenience during development, there is another alternative:
+> In lieu of setting up real Mailgun credentials, you can "fake" email
+> delivery by using any email address that ends in "@example.com".  This will
+> write automated emails to your logs rather than actually sending them.
+> (To simulate clicking on a link from an email, just copy and paste the link
+> from the terminal output into your browser.)
+
+ [?] If you're unsure, visit https://sailsjs.com/support`
         );
       }
 
-      var deferred = sails.helpers.mailgun.sendHtmlEmail.with({
+      await sails.helpers.mailgun.sendHtmlEmail.with({
         htmlMessage: htmlEmailContents,
         to: inputs.to,
-        subject: inputs.subject
+        subject: inputs.subject,
+        testMode: false
       });
-
-      if (inputs.ensureAck) {
-        await deferred;
-      } else {
-        // FUTURE: take advantage of .background() here instead (when available)
-        deferred.exec((err)=>{
-          if (err) {
-            sails.log.error(
-              'Background instruction failed:  Could not deliver email:\n'+
-              util.inspect(inputs,{depth:null})+'\n',
-              'Error details:\n'+
-              util.inspect(err)
-            );
-          } else {
-            sails.log.info(
-              'Background instruction complete:  Email sent (or at least queued):\n'+
-              util.inspect(inputs,{depth:null})
-            );
-          }
-        });//_∏_
-      }//ﬁ
     }//ﬁ
 
     // All done!
-    return {
-      loggedInsteadOfSending: dontActuallySend
-    };
+    return exits.success({
+      loggedInsteadOfSending: isToAddressConsideredFake
+    });
 
   }
 

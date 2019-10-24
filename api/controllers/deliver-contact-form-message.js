@@ -34,7 +34,12 @@ module.exports = {
       required: true,
       type: 'string',
       description: 'The custom message, in plain text.'
-    }
+    },
+    // recap:{
+    //   type: 'string',
+    //   required: true,
+
+    // }
 
   },
 
@@ -48,7 +53,7 @@ module.exports = {
   },
 
 
-  fn: async function(inputs) {
+  fn: async function(inputs, exits) {
 
     if (!sails.config.custom.internalEmailAddress) {
       throw new Error(
@@ -72,6 +77,8 @@ your custom config -- usually in \`config/custom.js\`, \`config/staging.js\`,
         message: inputs.message
       }
     });
+
+    return exits.success();
 
   }
 

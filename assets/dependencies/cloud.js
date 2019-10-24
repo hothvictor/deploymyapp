@@ -39,7 +39,7 @@
  */
 (function(factory, exposeUMD){
   exposeUMD(this, factory);
-})(function (_, io, $, SAILS_LOCALS, location, File, FileList, FormData){
+})(function (_, io, $, SAILS_LOCALS, location, File, FormData){
 
   //  ██████╗ ██████╗ ██╗██╗   ██╗ █████╗ ████████╗███████╗
   //  ██╔══██╗██╔══██╗██║██║   ██║██╔══██╗╚══██╔══╝██╔════╝
@@ -644,38 +644,38 @@
 
               // Check for file uploads.
               //
-              // If `FormData` constructors is available, check to see if any
-              // of the param values are File/FileList instances, or arrays of
-              // File instances. If they are, then remove them from a shallow
-              // clone of the params dictionary, and set them up separately.
-              // (The files will be attached to the request _after_ the text
-              // parameters.)
-              var uploadsByFieldName = {};
-              if (FormData && textParamsByFieldName) {
+              // If `File`+`FormData` constructors are available, check to
+              // see if any of the param values are File instances.  If
+              // they are, then remove them from a shallow clone of the
+              // params dictionary, and set them up separately.
+              // (The files will be attached to the request _after_
+              // the text parameters.)
+              var filesByFieldName = {};
+              if (File && FormData && textParamsByFieldName) {
                 textParamsByFieldName = _.extend({}, textParamsByFieldName);
                 _.each(textParamsByFieldName, function(value, fieldName){
-                  if (_.isObject(value) && ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && value.length > 0 && _.all(value, function(item) { return File && item instanceof File; })))) {
-                    uploadsByFieldName[fieldName] = value;
+                  if (_.isObject(value) && value instanceof File) {
+                    filesByFieldName[fieldName] = value;
                     delete textParamsByFieldName[fieldName];
-                  }//ﬁ
+                  }
                 });//∞
               }//ﬁ
 
               // Don't allow file uploads for GET requests,
               // or if the FormData constructor is somehow missing.
-              if (_.keys(uploadsByFieldName).length > 0) {
+              if (_.keys(filesByFieldName).length > 0) {
                 if (requestInfo.verb.match(/get/i)) {
                   throw new Error(
-                    'Detected File or FileList instance(s) provided for parameter(s):  '+
-                    _.keys(uploadsByFieldName)+'\n'+
+                    'Detected File instance(s) provided for parameter(s):  '+
+                    _.keys(filesByFieldName)+'\n'+
                     'But this is a nullipotent ('+requestInfo.verb.toUpperCase()+') '+
                     'request, which does not support file uploads.'
                   );
                 }//•
                 if (!FormData) {
                   throw new Error(
-                    'Detected File or FileList instance(s) provided for parameter(s):  '+
-                    _.keys(uploadsByFieldName)+'\n'+
+                    'Detected File instance(s) provided for parameter(s):  '+
+                    _.keys(filesByFieldName)+'\n'+
                     'But the native FormData constructor does not exist!'
                   );
                 }
@@ -706,9 +706,9 @@
                   // alongside the other stuff in the form.
                   // > Note that we include text params **FIRST**,
                   // > in order to support order-aware body parsers
-                  // > that rely on pessimistic upstream awareness,
-                  // > optimizing uploads and preventing DDoS attacks.
-                  else if (_.keys(uploadsByFieldName).length > 0){
+                  // > that rely on pessimistic upstream awareness
+                  // > optimize uploads and prevent DDoS attacks.
+                  else if (_.keys(filesByFieldName).length > 0){
                     ajaxOpts.processData = false;
                     ajaxOpts.contentType = false;
                     ajaxOpts.data = new FormData();
@@ -716,25 +716,15 @@
                       // Skip `undefined` values to more accurately mirror
                       // the behavior of JSON.stringify()
                       if (value === undefined) { return; }
-                      if (_.isObject(value)) {
-                        throw new Error('Could not encode value provided for '+fieldName+' because this request also contains file uploads.  In a request that contains one or more file uploads, any additional text parameter values must be primitives (strings, numbers, booleans, or `null`).  To encode complex structures like dictionaries and arrays, bust them apart into separate fields before sending the request, or use JSON.stringify() in front-end userland code to encode the data into a string before transmitting.  (If you go with the latter option, just be sure to also expect and decode the string value accordingly using JSON.parse() in your backend code).');
-                      }
                       ajaxOpts.data.append(fieldName, value);
                     });
-                    _.each(uploadsByFieldName, function(fileOrFileList, fieldName){
+                    _.each(filesByFieldName, function(file, fieldName){
                       // Skip `undefined` values for consistency.
-                      if (fileOrFileList === undefined) { return; }
-                      if (!_.isObject(fileOrFileList) || !_.isObject(fileOrFileList.constructor) || (fileOrFileList.constructor.name !== 'File' && fileOrFileList.constructor.name !== 'FileList' && !(_.isArray(fileOrFileList) && fileOrFileList.length > 0 && _.all(fileOrFileList, function(item) { return File && item instanceof File; })) ) ) {
-                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a FileList instance, a File instance, or an array of File instances.  Instead, got:'+fileOrFileList+'\n\nNote that this can also sometimes occur due to problems with code minification (e.g. uglify configuration).');
+                      if (file === undefined) { return; }
+                      if (!_.isObject(file) || !_.isObject(file.constructor) || file.constructor.name !== 'File') {
+                        throw new Error('Cannot upload as '+fieldName+' because the provided value is not a File instance.  Instead, got:'+file);
                       }
-                      if (fileOrFileList.constructor.name === 'FileList' || _.isArray(fileOrFileList)) {
-                        for (var i = 0; i < fileOrFileList.length; i++) {
-                          ajaxOpts.data.append(fieldName, fileOrFileList[i], fileOrFileList[i].name);
-                        }//∞
-                      }
-                      else {
-                        ajaxOpts.data.append(fieldName, fileOrFileList, fileOrFileList.name);
-                      }
+                      ajaxOpts.data.append(fieldName, file, file.name);
                     });
                   }
                   // Otherwise, attach params as a JSON-encoded request body.
@@ -893,19 +883,17 @@
                 //  ╚═╝     ╚═╝╚═╝           ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝
                 case 'machinepack-http': return (function _doAjaxWithMpHttp(){
 
-                  // If there are request parameters, check to be sure
+                  // If `File` constructor is available, check to be sure
                   // that none of the parameter values are File instances.
                   // > Note that if the File constructor is NOT available,
                   // > then we don't even bother checking (it's not like it
                   // > would work anyway!)
-                  if (requestInfo.params) {
+                  if (File && requestInfo.params) {
                     _.each(requestInfo.params, function(value, fieldName){
-                      if (_.isObject(value)) {
-                        if ((File && value instanceof File)||(FileList && value instanceof FileList)||(_.isArray(value) && value.length > 0 && _.all(value, function(item) { return File && item instanceof File; }))) {
-                          throw new Error('Detected File or FileList instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using this "http" pack.  Please call this method using a different request protocol.');
-                        }
+                      if (_.isObject(value) && value instanceof File) {
+                        throw new Error('Detected File instance provided for the `'+fieldName+'` parameter -- but file uploads are not currently supported using this "http" pack.  Please call this method using a different request protocol.');
                       }
-                    });//∞
+                    });
                   }//ﬁ
 
                   var mpHttpOpts = {
@@ -1753,7 +1741,6 @@
   var SAILS_LOCALS;
   var location;
   var File;
-  var FileList;
   var FormData;
 
   // First, handle optional deps that are gleaned from the global state:
@@ -1762,18 +1749,13 @@
   // > back in ~2015!)
   // =====================================================================
   if (global.location !== undefined) {
-    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]' || (_.isObject(global.location) && global.location.href))) {
+    if (global.location && typeof global.location === 'object' && (global.location.constructor.name === 'Location' || global.location.constructor.toString() === '[object Location]')) {
       location = global.location;
     }
   }//ﬁ
   if (global.File !== undefined) {
     if (global.File && typeof global.File === 'function' && global.File.name === 'File') {
       File = global.File;
-    }
-  }//ﬁ
-  if (global.FileList !== undefined) {
-    if (global.FileList && typeof global.FileList === 'function' && global.FileList.name === 'FileList') {
-      FileList = global.FileList;
     }
   }//ﬁ
   if (global.FormData !== undefined) {
@@ -1835,14 +1817,14 @@
     SAILS_LOCALS = undefined;
 
     // export:
-    _module.exports = factory(_, io, $, SAILS_LOCALS, location, File, FileList, FormData);
+    _module.exports = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
   }
   //˙°˚°·
   //‡AMD ˚¸
   else if(typeof define === 'function' && define.amd) {// eslint-disable-line no-undef
     throw new Error('Global `define()` function detected, but built-in AMD support in `cloud.js` is not currently recommended.  To resolve this, modify `cloud.js`.');
     // var _define = define;// eslint-disable-line no-undef
-    // _define(['_', 'sails.io.js', '$', 'SAILS_LOCALS', 'location', 'file', …, …], factory);
+    // _define(['_', 'sails.io.js', '$', 'SAILS_LOCALS', 'location', 'file'], factory);
   }
   //˙°˚˙°·
   //‡NUDE ˚°·˛
@@ -1881,6 +1863,6 @@
 
     // export:
     if (global.Cloud) { throw new Error('Cannot expose global variable: Conflicting global (`cloud`) already exists!'); }
-    global.Cloud = factory(_, io, $, SAILS_LOCALS, location, File, FileList, FormData);
+    global.Cloud = factory(_, io, $, SAILS_LOCALS, location, File, FormData);
   }
 });//…)

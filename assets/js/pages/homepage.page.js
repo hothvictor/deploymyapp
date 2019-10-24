@@ -29,6 +29,34 @@ parasails.registerPage('homepage', {
       }, 500);
     },
 
+    clickHeroButton2: async function() {
+      // Scroll to the 'get started' section:
+      $('html, body').animate({
+        scrollTop: this.$find('[role="scroll-destination2"]').offset().top
+      }, 500);
+    },
+
+    clickHeroButton3: async function() {
+      // Scroll to the 'get started' section:
+      $('html, body').animate({
+        scrollTop: this.$find('[role="scroll-destination3"]').offset().top
+      }, 500);
+    },
+
+    clickHeroButton4: async function() {
+      // Scroll to the 'get started' section:
+      $('html, body').animate({
+        scrollTop: this.$find('[role="scroll-destination4"]').offset().top
+      }, 500);
+    },
+
+    clickHeroButton5: async function() {
+      // Scroll to the 'get started' section:
+      $('html, body').animate({
+        scrollTop: this.$find('[role="scroll-destination5"]').offset().top
+      }, 500);
+    },
+
     // Private methods not tied to a particular DOM event are prefixed with _
     _setHeroHeight: function() {
       var $hero = this.$find('[full-page-hero]');
@@ -39,6 +67,7 @@ parasails.registerPage('homepage', {
       $hero.css('min-height', heightToSet - headerHeight+'px');
       this.heroHeightSet = true;
     },
+    
 
   }
 });

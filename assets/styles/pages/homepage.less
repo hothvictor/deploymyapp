@@ -1,4 +1,23 @@
 #homepage {
+  a:not(.btn) {
+    color: @brand;
+    border-bottom: 1px solid ;
+    &:hover {
+      text-decoration: none;
+      color: @text-normal;
+    }
+  }
+  
+  .safeimg {
+    width: 150px;
+    height: 150px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+  
+  
+
 
   .hero {
     padding-top: 100px;
@@ -21,7 +40,7 @@
       }
       .cloud {
         .fly-fade();
-        width: 80px;
+        width: 100%;
         &.cloud-1 {
           top: 55px;
           left: -40px;
@@ -29,7 +48,7 @@
           .animation-delay(3.5s);
         }
         &.cloud-2 {
-          top: 45px;
+          top: 10px;
           left: -40px;
           opacity: 0;
         }
@@ -70,7 +89,7 @@
   }
 
   .about-wrapper {
-    background-color: #eef5f9b8;
+    background-color: #ffffffec;
     .about {
       padding-top: 75px;
       padding-bottom: 50px;

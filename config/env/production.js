@@ -20,6 +20,18 @@
  */
 
 module.exports = {
+  
+
+  // models: {
+  //   connection: 'mLab'
+  // },
+
+  // adapter: 'sails-mongo',
+  
+  // session: {
+  //   adapter: 'connect-mongo',
+  //   url: 'mongodb://ds157956.mlab.com:57956/heroku_d57jl91j'
+  // },
 
 
   /**************************************************************************
@@ -47,8 +59,8 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     default: {
-      // adapter: 'sails-mysql',
-      // url: 'mysql://user:password@host:port/database',
+     // adapter: 'sails-mysql',
+      //url: 'mysql://b800e924c880df:9a90e7c7@us-cdbr-iron-east-02.cleardb.net/heroku_aefff6365fedc53?reconnect=true',
       //--------------------------------------------------------------------------
       //  /\   To avoid checking it in to version control, you might opt to set
       //  ||   sensitive credentials like `url` using an environment variable.
@@ -70,7 +82,7 @@ module.exports = {
       * https://sailsjs.com/config/datastores                                     *
       *                                                                           *
       ****************************************************************************/
-      // ssl: true,
+      ssl: true,
 
     },
 
@@ -101,7 +113,7 @@ module.exports = {
     * choose to keep this enabled.)                                            *
     *                                                                          *
     ***************************************************************************/
-    // cascadeOnDestroy: false,
+    cascadeOnDestroy: false,
 
   },
 
@@ -184,7 +196,7 @@ module.exports = {
     * > (For a full list, see https://sailsjs.com/plugins/sessions)            *
     *                                                                          *
     ***************************************************************************/
-    // adapter: '@sailshq/connect-redis',
+    adapter: '@sailshq/connect-redis',
     // url: 'redis://user:password@localhost:6379/databasenumber',
     //--------------------------------------------------------------------------
     // /\   OR, to avoid checking it in to version control, you might opt to
@@ -221,7 +233,7 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     cookie: {
-      // secure: true,
+      secure: true,
       maxAge: 24 * 60 * 60 * 1000,  // 24 hours
     },
 
@@ -241,6 +253,10 @@ module.exports = {
   ***************************************************************************/
   sockets: {
 
+    
+
+    
+
     /***************************************************************************
     *                                                                          *
     * Uncomment the `onlyAllowOrigins` whitelist below to configure which      *
@@ -251,8 +267,11 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     // onlyAllowOrigins: [
-    //   'https://example.com',
-    //   'https://staging.example.com',
+      
+    //   'http://www.ECHK.com',
+    //   'http://ECHK.com',
+    //   'https://ECHK.herokuapp.com'
+      
     // ],
 
 
@@ -268,7 +287,7 @@ module.exports = {
     * (https://sailsjs.com/docs/concepts/deployment/scaling)                   *
     *                                                                          *
     ***************************************************************************/
-    // adapter: '@sailshq/socket.io-redis',
+    adapter: '@sailshq/socket.io-redis',
     // url: 'redis://user:password@bigsquid.redistogo.com:9562/databasenumber',
     //--------------------------------------------------------------------------
     // /\   OR, to avoid checking it in to version control, you might opt to
@@ -322,7 +341,7 @@ module.exports = {
     * (https://sailsjs.com/config/http)                                        *
     *                                                                          *
     ***************************************************************************/
-    // trustProxy: true,
+    trustProxy: true,
 
   },
 
@@ -338,6 +357,7 @@ module.exports = {
   *                                                                         *
   ***************************************************************************/
   // port: 80,
+  // port: process.env.PORT,
 
 
 
@@ -373,6 +393,7 @@ module.exports = {
   custom: {
     baseUrl: 'https://example.com',
     internalEmailAddress: 'support@example.com',
+    
 
     // mailgunDomain: 'mg.example.com',
     // mailgunSecret: 'key-prod_fake_bd32301385130a0bafe030c',

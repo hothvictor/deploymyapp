@@ -7,11 +7,17 @@ parasails.registerPage('contact', {
     syncing: false,
 
     // Form data
-    formData: { /* … */ },
+    formData: {
+      /* … */
+    },
+
+    // recapToken: undefined,
 
     // For tracking client-side validation errors in our form.
     // > Has property set to `true` for each invalid property in `formData`.
-    formErrors: { /* … */ },
+    formErrors: {
+      /* … */
+    },
 
     // Server error state for the form
     cloudError: '',
@@ -23,12 +29,14 @@ parasails.registerPage('contact', {
   //  ╦  ╦╔═╗╔═╗╔═╗╦ ╦╔═╗╦  ╔═╗
   //  ║  ║╠╣ ║╣ ║  ╚╦╝║  ║  ║╣
   //  ╩═╝╩╚  ╚═╝╚═╝ ╩ ╚═╝╩═╝╚═╝
-  beforeMount: function() {
+  beforeMount: function () {
     // Attach any initial data from the server.
     _.extend(this, SAILS_LOCALS);
+
   },
-  mounted: async function() {
+  mounted: async function () {
     //…
+
   },
 
   //  ╦╔╗╔╔╦╗╔═╗╦═╗╔═╗╔═╗╔╦╗╦╔═╗╔╗╔╔═╗
@@ -36,14 +44,14 @@ parasails.registerPage('contact', {
   //  ╩╝╚╝ ╩ ╚═╝╩╚═╩ ╩╚═╝ ╩ ╩╚═╝╝╚╝╚═╝
   methods: {
 
-    submittedForm: async function() {
+    submittedForm: async function () {
 
       // Show the success message.
       this.cloudSuccess = true;
 
     },
 
-    handleParsingForm: function() {
+    handleParsingForm: function () {
 
       // Clear out any pre-existing error messages.
       this.formErrors = {};
@@ -51,24 +59,28 @@ parasails.registerPage('contact', {
       var argins = this.formData;
 
       // Validate email:
-      if(!argins.emailAddress) {
+      if (!argins.emailAddress) {
         this.formErrors.emailAddress = true;
       }
 
       // Validate name:
-      if(!argins.fullName) {
+      if (!argins.fullName) {
         this.formErrors.fullName = true;
       }
 
       // Validate topic:
-      if(!argins.topic) {
+      if (!argins.topic) {
         this.formErrors.topic = true;
       }
 
       // Validate message:
-      if(!argins.message) {
+      if (!argins.message) {
         this.formErrors.message = true;
       }
+
+      // if (!argins.recap) {
+      //   this.formErrors.recap = true;
+      // }
 
       // If there were any issues, they've already now been communicated to the user,
       // so simply return undefined.  (This signifies that the submission should be
@@ -80,5 +92,20 @@ parasails.registerPage('contact', {
       return argins;
     },
 
-  }
+
+    // grecaptcha: (function () {
+    //   grecaptcha.execute('6LcI25wUAAAAACK6AuAODpPP7jY9Dn2hRYg3An0d', {
+    //     action: 'homepage'
+    //   }).then(function (token) {
+    //     console.log(token);
+    //     this.recapToken = token
+    //     return token
+    //   });
+    // })
+
+
+  },
+
+
+
 });

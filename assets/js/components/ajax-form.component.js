@@ -9,9 +9,9 @@
  *
  * @slot default                     [form contents]
  *
- * @event update:cloudError          [:cloud-error.sync="…"]
- * @event update:syncing             [:syncing.sync="…"]
- * @event update:formErrors          [:form-errors.sync="…"]
+ * @event update:cloudError          [.sync]
+ * @event update:syncing             [.sync]
+ * @event update:formErrors          [.sync]
  * @event submitted                  [emitted after the server responds with a 2xx status code]
  * @event rejected                   [emitted after the server responds with a non-2xx status code]
  * -----------------------------------------------------------------------------
@@ -25,12 +25,17 @@ parasails.registerComponent('ajaxForm', {
   // Note:
   // Some of these props rely on the `.sync` modifier re-introduced in Vue 2.3.x.
   // For more info, see: https://vuejs.org/v2/guide/components.html#sync-Modifier
+  //
+  // Specifically, these special props are:
+  // • syncing
+  // • cloudError
+  // • formErrors
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   props: [
-    'syncing',// « 2-way bound (:syncing.sync="…")
-    'cloudError',// « 2-way bound (:cloud-error.sync="…")
+    'syncing',// « 2-way bound (.sync)
+    'cloudError',// « 2-way bound (.sync)
     'action',
-    'formErrors',// « 2-way bound (:form-errors.sync="…")
+    'formErrors',// « 2-way bound (.sync)
     'formData',
     'formRules',
 
@@ -51,7 +56,7 @@ parasails.registerComponent('ajaxForm', {
   //  ╠═╣ ║ ║║║║
   //  ╩ ╩ ╩ ╩ ╩╩═╝
   template: `
-  <form class="ajax-form" @submit.prevent="submit()" @keydown.meta.enter="keydownMetaEnter()">
+  <form class="ajax-form" @submit.prevent="submit()">
     <slot name="default"></slot>
   </form>
   `,
@@ -72,7 +77,7 @@ parasails.registerComponent('ajaxForm', {
     } else if (this.action !== undefined && !_.isFunction(Cloud[this.action])) {
       throw new Error('Unrecognized `action` in <ajax-form>.  Did you mean to type `action="'+_.camelCase(this.action)+'"`?  (<ajax-form> expects `action` to be provided in camelCase format.  In other words, to reference the action at "api/controllers/foo/bar/do-something", use `action="doSomething"`.)');
     } else if (this.handleSubmitting !== undefined && !_.isFunction(this.handleSubmitting)) {
-      throw new Error('Invalid `:handle-submitting` function passed to <ajax-form>.  (Any chance you forgot the ":" in front of the prop name?)  For example: `:handle-submitting="handleSubmittingSomeForm"`.  This function should be an `async function`, and it should either throw a special exit signal or return response data from the server.  (If this custom `handleSubmitting` will be doing something more complex than a single request to a server, feel free to return whatever amalgamation of data you wish.)');
+      throw new Error('Invalid `:handle-submitting` function passed to <ajax-form>.  For example: `:handle-submitting="handleSubmittingSomeForm"`.  This function should be an `async function`, and it should either throw a special exit signal or return response data from the server.  (If this custom `handleSubmitting` will be doing something more complex than a single request to a server, feel free to return whatever amalgamation of data you wish.)');
     }
 
     if (this.handleParsing === undefined && this.formData === undefined) {
@@ -80,9 +85,9 @@ parasails.registerComponent('ajaxForm', {
     } else if (this.handleParsing !== undefined && this.formData !== undefined) {
       throw new Error('Both `:form-data` AND `:handle-parsing` were passed in to <ajax-form>, but only one or the other should be provided.');
     } else if (this.handleParsing !== undefined && !_.isFunction(this.handleParsing)) {
-      throw new Error('Invalid `:handle-parsing` function passed to <ajax-form>.  (Any chance you forgot the ":" in front of the prop name?)  For example: `:handle-parsing="handleParsingSomeForm"`.  This function should return a dictionary (plain JavaScript object like `{}`) of parsed form data, ready to be sent in a request to the server.');
+      throw new Error('Invalid `:handle-parsing` function passed to <ajax-form>.  For example: `:handle-parsing="handleParsingSomeForm"`.  This function should return a dictionary (plain JavaScript object like `{}`) of parsed form data, ready to be sent in a request to the server.');
     } else if (this.formData !== undefined && (!_.isObject(this.formData) || _.isFunction(this.formData) || _.isArray(this.formData))) {
-      throw new Error('Invalid `:form-data` passed to <ajax-form>.  (Any chance you forgot the ":" in front of the prop name?)  For example: `:form-data="someFormData"`.  This should reference a dictionary (plain JavaScript object like `{}`).  Specifically, `:form-data` should only be used in the case where the raw data from the form in the user interface happens to correspond **EXACTLY** with the names and format of the argins that should be sent in a request to the server.  (For more nuanced behavior, use `handle-parsing` instead!)');
+      throw new Error('Invalid `:form-data` passed to <ajax-form>.  For example: `:form-data="someFormData"`.  This should reference a dictionary (plain JavaScript object like `{}`).  Specifically, `:form-data` should only be used in the case where the raw data from the form in the user interface happens to correspond **EXACTLY** with the names and format of the argins that should be sent in a request to the server.  (For more nuanced behavior, use `handle-parsing` instead!)');
     }
 
     if (!this.formData && (this.formRules || this.formErrors)) {
@@ -140,18 +145,7 @@ parasails.registerComponent('ajaxForm', {
   //  ╩╝╚╝ ╩ ╚═╝╩╚═╩ ╩╚═╝ ╩ ╩╚═╝╝╚╝╚═╝
   methods: {
 
-    keydownMetaEnter: async function() {
-      await this._submit();
-    },
-
     submit: async function () {
-      await this._submit();
-    },
-
-    //  ╔═╗╦═╗╦╦  ╦╔═╗╔╦╗╔═╗  ╔╦╗╔═╗╔╦╗╦ ╦╔═╗╔╦╗╔═╗
-    //  ╠═╝╠╦╝║╚╗╔╝╠═╣ ║ ║╣   ║║║║╣  ║ ╠═╣║ ║ ║║╚═╗
-    //  ╩  ╩╚═╩ ╚╝ ╩ ╩ ╩ ╚═╝  ╩ ╩╚═╝ ╩ ╩ ╩╚═╝═╩╝╚═╝
-    _submit: async function () {
 
       // Prevent double-posting.
       if (this.syncing) {
@@ -305,16 +299,17 @@ parasails.registerComponent('ajaxForm', {
 
         // If there were any form errors, avast.  (Submission will not be attempted.)
         if (Object.keys(formErrors).length > 0) {
-          // In development mode, also log a warning
-          // (so that it's clear what's going on just in case validation
-          // states/messages are not hooked up in the HTML template)
-          if (this._environment !== 'production') {
-            console.warn(`<ajax-form> encountered ${Object.keys(formErrors).length} form error${Object.keys(formErrors).length !== 1 ? 's' : ''} when performing client-side validation of "form-data" versus "form-rules".  (Note: This warning is only here to assist with debugging-- it will not be displayed in production.  If you're unsure, check out https://sailsjs.com/support for more resources.)`, _.cloneDeep(formErrors));
-          }//ﬁ
           return;
         }//•
       }//ﬁ  (determining argins)
 
+
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      // FUTURE: Potentially filter unused data in argins here before proceeding
+      // (assuming cloudsdk has that information available)
+      // Or better yet, just have `Cloud.*.with()` take care of that automatically.
+      // console.log('about to send argins:',argins);
+      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
       // Set syncing state to `true` on userland "syncing" prop.
       this.$emit('update:syncing', true);
@@ -333,22 +328,17 @@ parasails.registerComponent('ajaxForm', {
           result = await this.handleSubmitting(argins);
         } catch (err) {
           rawErrorFromCloudSDK = err;
-          if (_.isString(err) && err !== '') {
-            failedWithCloudExit = err;
-          } else if (_.isError(err) && err.exit) {
-            failedWithCloudExit = err.exit;
-          } else if (_.isObject(err) && !_.isError(err) && !_.isArray(err) && !_.isFunction(err) && Object.keys(err)[0] && _.isString(Object.keys(err)[0])) {
-            failedWithCloudExit = Object.keys(err)[0];
+          if (_.isString(err)) {
+            failedWithCloudExit = err || 'error';
+          } else if (_.isError(err)) {
+            failedWithCloudExit = err.exit || 'error';
+          } else if (_.isObject(err)) {
+            failedWithCloudExit = Object.keys(err)[0] || 'error';
           } else {
             throw err;
           }
         }
       } else {
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // FUTURE: Potentially filter unused data in argins here before proceeding
-        // (assuming cloudsdk has that information available)
-        // Or better yet, just have `Cloud.*.with()` take care of that automatically.
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         result = await Cloud[this.action].with(argins)
         .tolerate((err)=>{
           rawErrorFromCloudSDK = err;
