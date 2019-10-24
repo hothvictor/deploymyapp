@@ -20,14 +20,14 @@
  */
 
 module.exports = {
-  
+
 
   // models: {
   //   connection: 'mLab'
   // },
 
   // adapter: 'sails-mongo',
-  
+
   // session: {
   //   adapter: 'connect-mongo',
   //   url: 'mongodb://ds157956.mlab.com:57956/heroku_d57jl91j'
@@ -196,7 +196,7 @@ module.exports = {
     * > (For a full list, see https://sailsjs.com/plugins/sessions)            *
     *                                                                          *
     ***************************************************************************/
-    adapter: '@sailshq/connect-redis',
+    // adapter: '@sailshq/connect-redis',
     // url: 'redis://user:password@localhost:6379/databasenumber',
     //--------------------------------------------------------------------------
     // /\   OR, to avoid checking it in to version control, you might opt to
@@ -253,9 +253,9 @@ module.exports = {
   ***************************************************************************/
   sockets: {
 
-    
 
-    
+
+
 
     /***************************************************************************
     *                                                                          *
@@ -267,11 +267,11 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     // onlyAllowOrigins: [
-      
+
     //   'http://www.ECHK.com',
     //   'http://ECHK.com',
     //   'https://ECHK.herokuapp.com'
-      
+
     // ],
 
 
@@ -287,7 +287,7 @@ module.exports = {
     * (https://sailsjs.com/docs/concepts/deployment/scaling)                   *
     *                                                                          *
     ***************************************************************************/
-    adapter: '@sailshq/socket.io-redis',
+    // adapter: '@sailshq/socket.io-redis',
     // url: 'redis://user:password@bigsquid.redistogo.com:9562/databasenumber',
     //--------------------------------------------------------------------------
     // /\   OR, to avoid checking it in to version control, you might opt to
@@ -393,7 +393,7 @@ module.exports = {
   custom: {
     baseUrl: 'https://example.com',
     internalEmailAddress: 'support@example.com',
-    
+
 
     // mailgunDomain: 'mg.example.com',
     // mailgunSecret: 'key-prod_fake_bd32301385130a0bafe030c',
