@@ -40,8 +40,8 @@ module.exports = Object.assign({}, PRODUCTION_CONFIG, {
   sockets: Object.assign({}, PRODUCTION_CONFIG.sockets, {
 
     onlyAllowOrigins: [
-      'http://localhost:1337',
-      'https://stagingmyapp.herokuapp.com'
+      'http://localhost:1337/',
+      'https://stagingmyapp.herokuapp.com/'
       // 'http://www.ECHK.com',
       // 'http://ECHK.com',
       // 'https://ECHK.herokuapp.com'
@@ -75,7 +75,7 @@ module.exports = Object.assign({}, PRODUCTION_CONFIG, {
 
   custom: Object.assign({}, PRODUCTION_CONFIG.custom, {
 
-    baseUrl: 'https://stagingmyapp.herokuapp.com/',
+    baseUrl: 'https://stagingmyapp.herokuapp.com',
     //--------------------------------------------------------------------------
     // /\  Hard-code the base URL where your staging environment is hosted.
     // ||  (or use system env var: `sails_custom__baseUrl`)
